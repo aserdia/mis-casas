@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1A1714">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mis Casas">
+<title>Mis Casas</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F7F5F0; --surface:#FFF; --surface2:#F0EDE6; --border:#E2DDD5; --border2:#C8C2B8;
+  --text:#1A1714; --text2:#6B6560; --text3:#9E9890;
+  --green:#2D7A4F; --green-bg:#E8F5EE; --green-border:#A8D5BC;
+  --red:#B84040; --red-bg:#FBEEEE; --red-border:#E8AEAE;
+  --amber:#8B5E00; --amber-bg:#FEF3DC; --amber-border:#F5D88A;
+  --blue:#1A5F9E; --blue-bg:#E8F2FB; --blue-border:#9CC5EE;
+  --c0:#1A5F9E; --c1:#2D7A4F; --c2:#8B5E00; --c3:#8B3A3A; --c4:#6B3FA0; --c5:#1A7A7A;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); }
+
+/* ── Layout shell ── */
+.shell { display:flex; flex-direction:column; height:100%; height:100dvh; }
+.topbar {
+  background:var(--text); color:#fff;
+  padding: calc(12px + var(--safe-top)) 16px 12px;
+  display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+}
+.topbar-title { font-size:17px; font-weight:600; letter-spacing:-.3px; }
+.topbar-sub { font-size:11px; opacity:.55; margin-top:1px; }
+.topbar-btn { background:rgba(255,255,255,.15); border:none; color:#fff; border-radius:8px; padding:7px 12px; font-size:12px; font-weight:500; font-family:inherit; cursor:pointer; }
+
+.content { flex:1; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
+.inner { padding:12px 14px calc(80px + var(--safe-bot)); }
+
+/* ── Bottom nav ── */
+.bottom-nav {
+  display:flex; background:var(--surface); border-top:1px solid var(--border);
+  padding-bottom: var(--safe-bot); flex-shrink:0;
+}
+.bnav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 4px 8px; background:none; border:none; cursor:pointer; font-family:inherit; color:var(--text3); font-size:10px; font-weight:500; }
+.bnav-btn.on { color:var(--text); }
+.bnav-icon { font-size:20px; line-height:1; }
+
+/* ── Alerts ── */
+.alerts { display:flex; flex-direction:column; gap:7px; margin-bottom:14px; }
+.alert { display:flex; gap:8px; padding:9px 12px; border-radius:10px; border:1px solid; font-size:12px; line-height:1.5; align-items:flex-start; }
+.alert.warn  { background:var(--amber-bg); border-color:var(--amber-border); color:var(--amber); }
+.alert.info  { background:var(--blue-bg);  border-color:var(--blue-border);  color:var(--blue); }
+.alert.danger{ background:var(--red-bg);   border-color:var(--red-border);   color:var(--red); }
+.alert-text { flex:1; }
+.alert-x { background:none; border:none; cursor:pointer; color:inherit; opacity:.5; font-size:14px; flex-shrink:0; padding:0; }
+
+/* ── Calendar ── */
+.cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.cal-nav-btn { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:6px 12px; font-size:16px; cursor:pointer; color:var(--text); }
+.cal-month { font-size:16px; font-weight:600; letter-spacing:-.3px; }
+
+.house-scroll { display:flex; gap:6px; overflow-x:auto; padding-bottom:8px; margin-bottom:10px; scrollbar-width:none; }
+.house-scroll::-webkit-scrollbar { display:none; }
+.hchip { padding:5px 12px; border-radius:20px; border:1px solid var(--border); background:var(--surface); cursor:pointer; font-size:11px; font-weight:500; color:var(--text2); white-space:nowrap; font-family:inherit; flex-shrink:0; }
+.hchip.on { color:#fff; border-color:transparent; }
+.hchip[data-h="all"].on { background:var(--text); }
+.hchip[data-h="0"].on{background:var(--c0);} .hchip[data-h="1"].on{background:var(--c1);}
+.hchip[data-h="2"].on{background:var(--c2);} .hchip[data-h="3"].on{background:var(--c3);}
+.hchip[data-h="4"].on{background:var(--c4);} .hchip[data-h="5"].on{background:var(--c5);}
+
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+.cal-head { background:var(--surface2); padding:7px 2px; text-align:center; font-size:10px; font-weight:600; color:var(--text2); letter-spacing:.05em; border-bottom:1px solid var(--border); }
+.cal-cell { min-height:64px; padding:4px 3px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); cursor:pointer; }
+.cal-cell:active { background:var(--surface2); }
+.cal-cell.dim .dnum { color:var(--text3); }
+.cal-cell.dim { background:#FAFAF8; }
+.cal-cell.tod { background:#FFFDF5; }
+.cal-cell.tod .dnum { color:var(--amber); font-weight:700; }
+.dnum { font-size:11px; font-weight:500; color:var(--text2); font-family:'DM Mono',monospace; margin-bottom:3px; }
+.mpill { font-size:9px; padding:1px 4px; border-radius:3px; margin-bottom:1px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; display:block; line-height:1.6; font-weight:500; border-left:2px solid transparent; }
+.mpill.entrada { background:var(--green-bg); color:var(--green); }
+.mpill.salida  { background:var(--red-bg);   color:var(--red); }
+.mmore { font-size:9px; color:var(--text3); }
+
+/* ── List view ── */
+.list-item { display:flex; align-items:center; gap:10px; padding:11px 12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; margin-bottom:7px; }
+.li-date { font-size:11px; color:var(--text2); min-width:58px; font-family:'DM Mono',monospace; line-height:1.4; }
+.li-cd { font-size:10px; min-width:46px; }
+.badge { font-size:10px; font-weight:600; padding:2px 7px; border-radius:9px; min-width:54px; text-align:center; }
+.badge.entrada { background:var(--green-bg); color:var(--green); border:1px solid var(--green-border); }
+.badge.salida  { background:var(--red-bg);   color:var(--red);   border:1px solid var(--red-border); }
+.li-info { flex:1; min-width:0; }
+.li-name { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.li-sub { font-size:11px; color:var(--text3); margin-top:1px; }
+.del-btn { background:none; border:none; cursor:pointer; font-size:14px; color:var(--text3); padding:4px; border-radius:6px; flex-shrink:0; }
+.del-btn:active { background:var(--red-bg); color:var(--red); }
+.empty { font-size:13px; color:var(--text3); padding:20px 0; text-align:center; }
+
+/* ── Section label ── */
+.sec-label { font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.07em; margin:16px 0 8px; }
+
+/* ── Modals ── */
+.overlay { position:fixed; inset:0; background:rgba(20,16,12,.4); display:flex; align-items:flex-end; z-index:300; backdrop-filter:blur(3px); }
+.sheet {
+  background:var(--surface); border-radius:20px 20px 0 0;
+  padding:20px 18px calc(20px + var(--safe-bot));
+  width:100%; max-height:90dvh; overflow-y:auto;
+}
+.sheet-handle { width:36px; height:4px; background:var(--border2); border-radius:2px; margin:0 auto 18px; }
+.sheet-title { font-size:16px; font-weight:600; margin-bottom:18px; }
+.form-label { font-size:11px; font-weight:600; color:var(--text2); display:block; margin-bottom:5px; text-transform:uppercase; letter-spacing:.05em; }
+.form-row { margin-bottom:14px; }
+.form-row input, .form-row select { width:100%; padding:11px 12px; border:1px solid var(--border); border-radius:9px; font-size:15px; font-family:inherit; background:var(--bg); color:var(--text); outline:none; -webkit-appearance:none; }
+.form-row input:focus, .form-row select:focus { border-color:var(--text); }
+.form-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.sheet-actions { display:flex; gap:8px; margin-top:18px; }
+.btn-full { flex:1; padding:13px; border-radius:10px; font-size:15px; font-weight:500; font-family:inherit; cursor:pointer; border:none; }
+.btn-save { background:var(--text); color:#fff; }
+.btn-cancel { background:var(--surface2); color:var(--text2); }
+
+/* Day sheet events */
+.ds-event { display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-radius:9px; margin-bottom:8px; }
+.ds-event.entrada { background:var(--green-bg); border:1px solid var(--green-border); }
+.ds-event.salida  { background:var(--red-bg);   border:1px solid var(--red-border); }
+.ds-label { font-size:13px; font-weight:500; }
+.ds-sub { font-size:11px; color:var(--text2); margin-top:2px; }
+
+/* Install banner */
+.install-bar { background:var(--blue-bg); border:1px solid var(--blue-border); color:var(--blue); border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:12px; display:flex; align-items:center; gap:8px; }
+.install-bar button { background:var(--blue); color:#fff; border:none; border-radius:7px; padding:6px 12px; font-size:12px; font-family:inherit; font-weight:500; cursor:pointer; white-space:nowrap; }
+
+/* Notif bar */
+.notif-bar { background:var(--amber-bg); border:1px solid var(--amber-border); color:var(--amber); border-radius:10px; padding:10px 12px; margin-bottom:12px; font-size:12px; display:flex; align-items:center; gap:8px; }
+.notif-bar button { background:var(--amber); color:#fff; border:none; border-radius:7px; padding:6px 12px; font-size:12px; font-family:inherit; font-weight:500; cursor:pointer; white-space:nowrap; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">🏠 Mis Casas</div>
+      <div class="topbar-sub" id="topSub">Cargando...</div>
+    </div>
+    <button class="topbar-btn" id="openAdd">+ Añadir</button>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="content" id="mainContent">
+    <div class="inner" id="mainInner"></div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="bottom-nav">
+    <button class="bnav-btn on" data-view="cal"><span class="bnav-icon">📅</span>Calendario</button>
+    <button class="bnav-btn" data-view="upcoming"><span class="bnav-icon">⏰</span>Próximos</button>
+    <button class="bnav-btn" data-view="exits"><span class="bnav-icon">🚪</span>Salidas</button>
+    <button class="bnav-btn" data-view="all"><span class="bnav-icon">📋</span>Todo</button>
+  </div>
+
+</div>
+
+<!-- Day sheet -->
+<div class="overlay" id="dayOverlay" style="display:none">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="dayTitle"></div>
+    <div id="dayEvents"></div>
+    <div class="sheet-actions"><button class="btn-full btn-cancel" id="closeDaySheet">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- Add sheet -->
+<div class="overlay" id="addOverlay" style="display:none">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Nuevo evento</div>
+    <div class="form-row">
+      <label class="form-label">Nombre del inquilino</label>
+      <input type="text" id="iName" placeholder="Ej: Ana García" autocomplete="name">
+    </div>
+    <div class="form-2">
+      <div>
+        <label class="form-label">Casa</label>
+        <select id="iHouse">
+          <option value="0">Isla de Ons</option>
+          <option value="1">Castellon</option>
+          <option value="2">Castroviejo</option>
+          <option value="3">Maudes</option>
+          <option value="4">Real de Pinto</option>
+          <option value="5">Villajoyosa</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Habitación</label>
+        <input type="text" id="iRoom" placeholder="Hab. 1">
+      </div>
+    </div>
+    <div class="form-2">
+      <div>
+        <label class="form-label">Tipo</label>
+        <select id="iType"><option value="entrada">Entrada</option><option value="salida">Salida</option></select>
+      </div>
+      <div>
+        <label class="form-label">Fecha</label>
+        <input type="date" id="iDate">
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-full btn-cancel" id="cancelAdd">Cancelar</button>
+      <button class="btn-full btn-save" id="saveAdd">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const HOUSES  = ['Isla de Ons','Castellon','Castroviejo','Maudes','Real de Pinto','Villajoyosa'];
+const HCOLORS = ['#1A5F9E','#2D7A4F','#8B5E00','#8B3A3A','#6B3FA0','#1A7A7A'];
+const MONTHS  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DAYS    = ['L','M','X','J','V','S','D'];
+const SK='mcs_v4', AK='mcs_dismissed_v4', NK='mcs_notif_v4';
+
+const today = new Date(); today.setHours(0,0,0,0);
+let viewYear=today.getFullYear(), viewMonth=today.getMonth();
+let activeHouse='all', activeView='cal', nextId=200;
+
+const toStr  = d=>d.toISOString().slice(0,10);
+const toDate = s=>{const d=new Date(s+'T00:00:00');d.setHours(0,0,0,0);return d;};
+const diffDays=(a,b)=>Math.round((a-b)/86400000);
+const load =k=>{try{return JSON.parse(localStorage.getItem(k))||[];}catch(e){return[];}};
+const loadS=k=>{try{return new Set(JSON.parse(localStorage.getItem(k))||[]);}catch(e){return new Set();}};
+const save =(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const saveS=(k,s)=>localStorage.setItem(k,JSON.stringify([...s]));
+
+const SEED=[
+  {id:1,  name:'Daniel Hernandez',          house:0,room:'Hab. 1',type:'entrada',date:'2026-03-15'},
+  {id:2,  name:'Daniel Hernandez',          house:0,room:'Hab. 1',type:'salida', date:'2026-07-15'},
+  {id:3,  name:'Nicolas Miguel Miguel',     house:0,room:'Hab. 2',type:'entrada',date:'2025-08-25'},
+  {id:4,  name:'Nicolas Miguel Miguel',     house:0,room:'Hab. 2',type:'salida', date:'2026-08-24'},
+  {id:5,  name:'Melih Aksoy',               house:0,room:'Hab. 3',type:'entrada',date:'2025-09-03'},
+  {id:6,  name:'Melih Aksoy',               house:0,room:'Hab. 3',type:'salida', date:'2026-03-31'},
+  {id:7,  name:'Chiara',                    house:0,room:'Hab. 3',type:'entrada',date:'2026-04-01'},
+  {id:8,  name:'Chiara',                    house:0,room:'Hab. 3',type:'salida', date:'2026-06-30'},
+  {id:9,  name:'Habitual',                  house:0,room:'Hab. 3',type:'entrada',date:'2026-07-01'},
+  {id:10, name:'Habitual',                  house:0,room:'Hab. 3',type:'salida', date:'2026-10-30'},
+  {id:11, name:'Sébastien',                 house:0,room:'Hab. 4',type:'entrada',date:'2026-01-03'},
+  {id:12, name:'Sébastien',                 house:0,room:'Hab. 4',type:'salida', date:'2026-12-30'},
+  {id:13, name:'Lucas Estevez Martinez',    house:0,room:'Hab. 5',type:'entrada',date:'2025-10-10'},
+  {id:14, name:'Lucas Estevez Martinez',    house:0,room:'Hab. 5',type:'salida', date:'2026-07-31'},
+  {id:15, name:'Sergio Martinez Rivera',    house:0,room:'Hab. 5',type:'entrada',date:'2026-08-01'},
+  {id:16, name:'Sergio Martinez Rivera',    house:0,room:'Hab. 5',type:'salida', date:'2027-06-30'},
+  {id:17, name:'Abdelwaheb Benchikh',       house:0,room:'Hab. 6',type:'entrada',date:'2025-09-10'},
+  {id:18, name:'Abdelwaheb Benchikh',       house:0,room:'Hab. 6',type:'salida', date:'2026-03-10'},
+  {id:19, name:'Nicole',                    house:0,room:'Hab. 6',type:'entrada',date:'2026-03-14'},
+  {id:20, name:'Nicole',                    house:0,room:'Hab. 6',type:'salida', date:'2026-05-28'},
+  {id:21, name:'Daniel Sánchez Rosas',      house:1,room:'Hab. 1',type:'entrada',date:'2026-06-24'},
+  {id:22, name:'Daniel Sánchez Rosas',      house:1,room:'Hab. 1',type:'salida', date:'2027-03-24'},
+  {id:23, name:'Andrea Sielli',             house:1,room:'Hab. 2',type:'entrada',date:'2025-10-03'},
+  {id:24, name:'Andrea Sielli',             house:1,room:'Hab. 2',type:'salida', date:'2026-06-07'},
+  {id:25, name:'Habitual',                  house:1,room:'Hab. 2',type:'entrada',date:'2026-06-08'},
+  {id:26, name:'Habitual',                  house:1,room:'Hab. 2',type:'salida', date:'2027-01-07'},
+  {id:27, name:'Harold',                    house:1,room:'Hab. 3',type:'entrada',date:'2025-06-17'},
+  {id:28, name:'Harold',                    house:1,room:'Hab. 3',type:'salida', date:'2026-12-30'},
+  {id:29, name:'Eva Calzadilla',            house:1,room:'Hab. 4',type:'entrada',date:'2025-10-01'},
+  {id:30, name:'Eva Calzadilla',            house:1,room:'Hab. 4',type:'salida', date:'2026-09-01'},
+  {id:31, name:'Beatriz Gomes',             house:1,room:'Hab. 4',type:'entrada',date:'2026-09-04'},
+  {id:32, name:'Beatriz Gomes',             house:1,room:'Hab. 4',type:'salida', date:'2026-12-04'},
+  {id:33, name:'Patricia Yang',             house:2,room:'Hab. 1',type:'entrada',date:'2025-11-11'},
+  {id:34, name:'Patricia Yang',             house:2,room:'Hab. 1',type:'salida', date:'2026-03-28'},
+  {id:35, name:'Melih Aksoy',               house:2,room:'Hab. 1',type:'entrada',date:'2026-04-01'},
+  {id:36, name:'Melih Aksoy',               house:2,room:'Hab. 1',type:'salida', date:'2026-07-01'},
+  {id:37, name:'Luis Solís Questiaux',      house:2,room:'Hab. 2',type:'entrada',date:'2026-01-01'},
+  {id:38, name:'Luis Solís Questiaux',      house:2,room:'Hab. 2',type:'salida', date:'2026-05-31'},
+  {id:39, name:'Edardo Novallet',           house:2,room:'Hab. 3',type:'entrada',date:'2025-11-12'},
+  {id:40, name:'Edardo Novallet',           house:2,room:'Hab. 3',type:'salida', date:'2026-03-31'},
+  {id:41, name:'Sarah Rensing',             house:2,room:'Hab. 3',type:'entrada',date:'2026-04-08'},
+  {id:42, name:'Sarah Rensing',             house:2,room:'Hab. 3',type:'salida', date:'2026-06-15'},
+  {id:43, name:'Beatriz Oliva Galvan',      house:2,room:'Hab. 4',type:'entrada',date:'2025-11-11'},
+  {id:44, name:'Beatriz Oliva Galvan',      house:2,room:'Hab. 4',type:'salida', date:'2026-08-15'},
+  {id:45, name:'Eneko Garcia',              house:2,room:'Hab. 5',type:'entrada',date:'2025-11-29'},
+  {id:46, name:'Eneko Garcia',              house:2,room:'Hab. 5',type:'salida', date:'2026-09-30'},
+  {id:47, name:'Paula Sanchez Bogaz',       house:2,room:'Hab. 6',type:'entrada',date:'2025-11-05'},
+  {id:48, name:'Paula Sanchez Bogaz',       house:2,room:'Hab. 6',type:'salida', date:'2026-08-31'},
+  {id:49, name:'Porical',                   house:2,room:'Hab. 6',type:'entrada',date:'2026-09-05'},
+  {id:50, name:'Porical',                   house:2,room:'Hab. 6',type:'salida', date:'2026-12-31'},
+  {id:51, name:'Aline Ribeiro',             house:3,room:'Hab. 1',type:'entrada',date:'2025-10-08'},
+  {id:52, name:'Aline Ribeiro',             house:3,room:'Hab. 1',type:'salida', date:'2026-01-03'},
+  {id:53, name:'Friedrich Albrecht Dang',   house:3,room:'Hab. 1',type:'entrada',date:'2026-02-01'},
+  {id:54, name:'Friedrich Albrecht Dang',   house:3,room:'Hab. 1',type:'salida', date:'2026-04-14'},
+  {id:55, name:'Iker',                      house:3,room:'Hab. 1',type:'entrada',date:'2026-04-24'},
+  {id:56, name:'Iker',                      house:3,room:'Hab. 1',type:'salida', date:'2026-09-30'},
+  {id:57, name:'Lea Racinet',               house:3,room:'Hab. 2',type:'entrada',date:'2025-08-15'},
+  {id:58, name:'Lea Racinet',               house:3,room:'Hab. 2',type:'salida', date:'2026-06-30'},
+  {id:59, name:'Eleftheria Tsago',          house:3,room:'Hab. 3',type:'entrada',date:'2025-08-16'},
+  {id:60, name:'Eleftheria Tsago',          house:3,room:'Hab. 3',type:'salida', date:'2026-01-03'},
+  {id:61, name:'Martin Theophane Lambotte', house:3,room:'Hab. 3',type:'entrada',date:'2026-02-14'},
+  {id:62, name:'Martin Theophane Lambotte', house:3,room:'Hab. 3',type:'salida', date:'2026-06-19'},
+  {id:63, name:'Francisco Stemann',         house:3,room:'Hab. 4',type:'entrada',date:'2025-10-09'},
+  {id:64, name:'Francisco Stemann',         house:3,room:'Hab. 4',type:'salida', date:'2026-03-31'},
+  {id:65, name:'Alessandro',                house:3,room:'Hab. 4',type:'entrada',date:'2026-04-08'},
+  {id:66, name:'Alessandro',                house:3,room:'Hab. 4',type:'salida', date:'2026-09-30'},
+  {id:67, name:'Matyas Zboril',             house:3,room:'Hab. 5',type:'entrada',date:'2026-01-05'},
+  {id:68, name:'Matyas Zboril',             house:3,room:'Hab. 5',type:'salida', date:'2026-06-30'},
+  {id:69, name:'Linus Czech',               house:3,room:'Hab. 6',type:'entrada',date:'2025-08-12'},
+  {id:70, name:'Linus Czech',               house:3,room:'Hab. 6',type:'salida', date:'2026-01-02'},
+  {id:71, name:'Sklaera Ntumba Kanana',     house:3,room:'Hab. 6',type:'entrada',date:'2026-02-01'},
+  {id:72, name:'Sklaera Ntumba Kanana',     house:3,room:'Hab. 6',type:'salida', date:'2026-06-30'},
+  {id:73, name:'Camilo Pinedo',             house:4,room:'Hab. 1',type:'entrada',date:'2025-11-06'},
+  {id:74, name:'Camilo Pinedo',             house:4,room:'Hab. 1',type:'salida', date:'2026-09-30'},
+  {id:75, name:'José Rodrigo Monteros',     house:4,room:'Hab. 2',type:'entrada',date:'2026-03-01'},
+  {id:76, name:'José Rodrigo Monteros',     house:4,room:'Hab. 2',type:'salida', date:'2026-06-30'},
+  {id:77, name:'Carlos Dubon',              house:4,room:'Hab. 3',type:'entrada',date:'2025-07-28'},
+  {id:78, name:'Carlos Dubon',              house:4,room:'Hab. 3',type:'salida', date:'2026-01-11'},
+  {id:79, name:'Lale',                      house:4,room:'Hab. 3',type:'entrada',date:'2026-02-01'},
+  {id:80, name:'Lale',                      house:4,room:'Hab. 3',type:'salida', date:'2026-06-30'},
+  {id:81, name:'Elia Mosna',                house:4,room:'Hab. 4',type:'entrada',date:'2025-12-01'},
+  {id:82, name:'Elia Mosna',                house:4,room:'Hab. 4',type:'salida', date:'2026-08-31'},
+  {id:83, name:'Gabriel Milla',             house:4,room:'Hab. 5',type:'entrada',date:'2025-11-01'},
+  {id:84, name:'Gabriel Milla',             house:4,room:'Hab. 5',type:'salida', date:'2026-07-28'},
+  {id:85, name:'Weronika',                  house:4,room:'Hab. 6',type:'entrada',date:'2025-08-29'},
+  {id:86, name:'Weronika',                  house:4,room:'Hab. 6',type:'salida', date:'2026-03-06'},
+  {id:87, name:'Benjamin',                  house:4,room:'Hab. 6',type:'entrada',date:'2026-04-02'},
+  {id:88, name:'Benjamin',                  house:4,room:'Hab. 6',type:'salida', date:'2026-07-03'},
+  {id:89, name:'ACE ABE',                   house:5,room:'Hab. 1',type:'entrada',date:'2025-11-28'},
+  {id:90, name:'ACE ABE',                   house:5,room:'Hab. 1',type:'salida', date:'2026-12-31'},
+  {id:91, name:'David Cabrera Rodriguez',   house:5,room:'Hab. 2',type:'entrada',date:'2025-10-01'},
+  {id:92, name:'David Cabrera Rodriguez',   house:5,room:'Hab. 2',type:'salida', date:'2026-06-30'},
+  {id:93, name:'Habitual',                  house:5,room:'Hab. 2',type:'entrada',date:'2026-07-01'},
+  {id:94, name:'Habitual',                  house:5,room:'Hab. 2',type:'salida', date:'2027-06-30'},
+  {id:95, name:'Víctor Madrona López',      house:5,room:'Hab. 3',type:'entrada',date:'2025-10-23'},
+  {id:96, name:'Víctor Madrona López',      house:5,room:'Hab. 3',type:'salida', date:'2026-09-30'},
+  {id:97, name:'Carmen Riaza Jiménez',      house:5,room:'Hab. 4',type:'entrada',date:'2025-10-26'},
+  {id:98, name:'Carmen Riaza Jiménez',      house:5,room:'Hab. 4',type:'salida', date:'2026-06-30'},
+  {id:99, name:'Erika',                     house:5,room:'Hab. 4',type:'entrada',date:'2026-07-01'},
+  {id:100,name:'Erika',                     house:5,room:'Hab. 4',type:'salida', date:'2027-05-01'},
+];
+
+let events=load(SK);
+if(events.length===0){events=SEED;save(SK,events);}
+nextId=Math.max(...events.map(e=>e.id),199)+1;
+
+// ── Alerts ────────────────────────────────────────────────────────────────────
+function buildAlerts(){
+  const dis=loadS(AK),out=[];
+  events.forEach(ev=>{
+    const d=toDate(ev.date),diff=diffDays(d,today),h=HOUSES[ev.house];
+    const add=(key,type,text)=>{if(!dis.has(key))out.push({key,type,text});};
+    if(diff<=-7&&diff>=-21) add(`week_${ev.id}`,'warn',`⏰ <b>${ev.name}</b> — ${ev.type==='entrada'?'entró':'salió'} hace ${Math.abs(diff)}d · ${h}, ${ev.room}`);
+    if(ev.type==='salida'&&diff>=55&&diff<=65) add(`exit2m_${ev.id}`,'warn',`📅 <b>${ev.name}</b> se va en ~2 meses — ${d.toLocaleDateString('es-ES')} · ${h}, ${ev.room}`);
+    if(ev.type==='entrada'&&diff>=12&&diff<=16) add(`entry2w_${ev.id}`,'info',`🔑 <b>${ev.name}</b> entra en ${diff} días — ${d.toLocaleDateString('es-ES')} · ${h}, ${ev.room}`);
+    if(ev.type==='salida'&&diff>=0&&diff<=3) add(`exitnow_${ev.id}`,'danger',`🚨 <b>${ev.name}</b> sale ${diff===0?'HOY':`en ${diff}d`} · ${h}, ${ev.room}`);
+    if(ev.type==='entrada'&&diff>=1&&diff<=2) add(`entrynow_${ev.id}`,'danger',`🔑 <b>${ev.name}</b> entra ${diff===1?'MAÑANA':'en 2 días'} · ${h}, ${ev.room}`);
+  });
+  return out;
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+function sendNotifications(){
+  if(Notification.permission!=='granted')return;
+  const sent=loadS(NK),tk=toStr(today);
+  events.forEach(ev=>{
+    const d=toDate(ev.date),diff=diffDays(d,today);
+    const n=(key,title,body)=>{const fk=`${key}_${tk}`;if(!sent.has(fk)){new Notification(title,{body,tag:key,icon:'/icon-192.png'});sent.add(fk);}};
+    if(diff<=-7&&diff>=-21) n(`week_${ev.id}`,'⏰ Evento sin cerrar — Mis Casas',`${ev.name} (${HOUSES[ev.house]}) lleva más de 7 días.`);
+    if(ev.type==='salida'&&diff>=55&&diff<=65) n(`exit2m_${ev.id}`,'📅 Salida en 2 meses',`${ev.name} sale el ${d.toLocaleDateString('es-ES')}.`);
+    if(ev.type==='entrada'&&diff>=12&&diff<=16) n(`entry2w_${ev.id}`,'🔑 Entrada en 2 semanas',`${ev.name} entra el ${d.toLocaleDateString('es-ES')}.`);
+    if(ev.type==='salida'&&diff>=0&&diff<=1) n(`exitnow_${ev.id}`,'🚨 Salida inminente',`${ev.name} sale ${diff===0?'HOY':'mañana'} de ${HOUSES[ev.house]}.`);
+    if(ev.type==='entrada'&&diff===1) n(`entrynow_${ev.id}`,'🔑 Entrada mañana',`${ev.name} entra mañana en ${HOUSES[ev.house]}.`);
+  });
+  saveS(NK,sent);
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+const getEvts=s=>events.filter(e=>e.date===s&&(activeHouse==='all'||e.house===Number(activeHouse)));
+
+function buildAlertHTML(){
+  const alerts=buildAlerts();
+  if(!alerts.length)return'';
+  return`<div class="alerts">${alerts.map(a=>`<div class="alert ${a.type}"><span class="alert-text">${a.text}</span><button class="alert-x" data-key="${a.key}">✕</button></div>`).join('')}</div>`;
+}
+
+function buildInstallBar(){
+  if(window.matchMedia('(display-mode: standalone)').matches)return'';
+  return`<div class="install-bar">📲 Ábrelo en Chrome y pulsa <b>Añadir a pantalla de inicio</b> para instalar como app.</div>`;
+}
+
+function buildNotifBar(){
+  if(Notification.permission==='granted'||Notification.permission==='denied')return'';
+  return`<div class="notif-bar" id="notifBar">🔔 Activa notificaciones para recibir avisos automáticos. <button id="notifBtn">Activar</button></div>`;
+}
+
+function renderCal(){
+  const fd=new Date(viewYear,viewMonth,1).getDay(),off=fd===0?6:fd-1;
+  const dim=new Date(viewYear,viewMonth+1,0).getDate(),prev=new Date(viewYear,viewMonth,0).getDate();
+  const total=Math.ceil((off+dim)/7)*7,ts=toStr(today);
+
+  // House chips
+  const chips=[['all','Todas'],...HOUSES.map((h,i)=>[String(i),h.split(' ')[0]+' '+h.split(' ')[1]])];
+  const chipHTML=`<div class="house-scroll">${chips.map(([h,l])=>`<button class="hchip${activeHouse===h?' on':''}" data-h="${h}">${l}</button>`).join('')}</div>`;
+
+  // Days header
+  const heads=DAYS.map(d=>`<div class="cal-head">${d}</div>`).join('');
+
+  // Cells
+  let cells='';
+  for(let i=0;i<total;i++){
+    let cd,other=false;
+    if(i<off){cd=new Date(viewYear,viewMonth-1,prev-off+i+1);other=true;}
+    else if(i>=off+dim){cd=new Date(viewYear,viewMonth+1,i-off-dim+1);other=true;}
+    else{cd=new Date(viewYear,viewMonth,i-off+1);}
+    const cs=toStr(cd),evs=getEvts(cs);
+    const cls='cal-cell'+(other?' dim':'')+(cs===ts?' tod':'');
+    const pills=evs.slice(0,2).map(ev=>`<div class="mpill ${ev.type}" style="border-left-color:${HCOLORS[ev.house]}">${ev.name.split(' ')[0]}</div>`).join('');
+    const more=evs.length>2?`<div class="mmore">+${evs.length-2}</div>`:'';
+    cells+=`<div class="${cls}" data-date="${cs}"><div class="dnum">${cd.getDate()}</div>${pills}${more}</div>`;
+  }
+
+  document.getElementById('mainInner').innerHTML=
+    buildInstallBar()+buildNotifBar()+buildAlertHTML()+
+    `<div class="cal-nav">
+      <button class="cal-nav-btn" id="prev">‹</button>
+      <div class="cal-month">${MONTHS[viewMonth]} ${viewYear}</div>
+      <button class="cal-nav-btn" id="next">›</button>
+    </div>`+
+    chipHTML+
+    `<div class="cal-grid">${heads}${cells}</div>`;
+
+  bindCommon();
+  document.getElementById('prev').onclick=()=>{viewMonth--;if(viewMonth<0){viewMonth=11;viewYear--;}render();};
+  document.getElementById('next').onclick=()=>{viewMonth++;if(viewMonth>11){viewMonth=0;viewYear++;}render();};
+  document.querySelectorAll('.cal-cell').forEach(c=>c.addEventListener('click',()=>{
+    const evs=getEvts(c.dataset.date);
+    if(!evs.length)return;
+    const d=toDate(c.dataset.date);
+    document.getElementById('dayTitle').textContent=d.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+    document.getElementById('dayEvents').innerHTML=evs.map(ev=>`
+      <div class="ds-event ${ev.type}">
+        <div><div class="ds-label">${ev.type==='entrada'?'→ Entrada':'← Salida'} · ${ev.name}</div>
+        <div class="ds-sub">${HOUSES[ev.house]} · ${ev.room}</div></div>
+        <button class="del-btn" data-id="${ev.id}">🗑</button>
+      </div>`).join('');
+    document.getElementById('dayEvents').querySelectorAll('.del-btn').forEach(b=>b.onclick=()=>{deleteEvent(Number(b.dataset.id));document.getElementById('dayOverlay').style.display='none';});
+    document.getElementById('dayOverlay').style.display='flex';
+  }));
+}
+
+function listItem(ev){
+  const d=toDate(ev.date),diff=diffDays(d,today);
+  const lbl=d.toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit'});
+  const cd=diff<0?`Hace ${Math.abs(diff)}d`:diff===0?'Hoy':diff===1?'Mañana':`En ${diff}d`;
+  const cc=diff<0?'var(--text3)':diff<=3?'var(--red)':diff<=14?'var(--amber)':'var(--text3)';
+  return`<div class="list-item">
+    <div class="li-date">${lbl}</div>
+    <div class="li-cd" style="color:${cc}">${cd}</div>
+    <div class="badge ${ev.type}">${ev.type==='entrada'?'Entrada':'Salida'}</div>
+    <div class="li-info"><div class="li-name">${ev.name}</div><div class="li-sub" style="color:${HCOLORS[ev.house]}">${HOUSES[ev.house]} · ${ev.room}</div></div>
+    <button class="del-btn" data-id="${ev.id}">🗑</button>
+  </div>`;
+}
+
+function renderList(evs,emptyMsg){
+  const f=e=>activeHouse==='all'||e.house===Number(activeHouse);
+  const filtered=evs.filter(f);
+  document.getElementById('mainInner').innerHTML=
+    buildNotifBar()+buildAlertHTML()+
+    (filtered.length?filtered.map(listItem).join(''):`<div class="empty">${emptyMsg}</div>`);
+  bindCommon();
+  document.querySelectorAll('.del-btn[data-id]').forEach(b=>b.onclick=()=>deleteEvent(Number(b.dataset.id)));
+}
+
+function render(){
+  const f=e=>activeHouse==='all'||e.house===Number(activeHouse);
+  // update topbar sub
+  const upcoming60=events.filter(e=>{const d=toDate(e.date),diff=diffDays(d,today);return diff>=0&&diff<=60&&f(e);}).length;
+  document.getElementById('topSub').textContent=`${events.filter(f).length} eventos · ${upcoming60} en 60 días`;
+
+  if(activeView==='cal'){
+    renderCal();
+  } else if(activeView==='upcoming'){
+    const lim=new Date(today);lim.setDate(today.getDate()+60);
+    const evs=events.filter(e=>{const d=toDate(e.date);return d>=today&&d<=lim;}).sort((a,b)=>a.date.localeCompare(b.date));
+    renderList(evs,'Sin movimientos en los próximos 60 días');
+  } else if(activeView==='exits'){
+    const evs=events.filter(e=>e.type==='salida').sort((a,b)=>a.date.localeCompare(b.date));
+    renderList(evs,'No hay fechas de salida');
+  } else {
+    const evs=events.slice().sort((a,b)=>a.date.localeCompare(b.date));
+    renderList(evs,'No hay eventos');
+  }
+}
+
+function bindCommon(){
+  // Alert dismiss
+  document.querySelectorAll('.alert-x').forEach(b=>b.onclick=()=>{const s=loadS(AK);s.add(b.dataset.key);saveS(AK,s);render();});
+  // House chips
+  document.querySelectorAll('.hchip').forEach(c=>c.onclick=()=>{activeHouse=c.dataset.h;render();});
+  // Notif bar
+  const nb=document.getElementById('notifBtn');
+  if(nb) nb.onclick=()=>Notification.requestPermission().then(()=>render());
+}
+
+function deleteEvent(id){events=events.filter(e=>e.id!==id);save(SK,events);render();}
+window.deleteEvent=deleteEvent;
+
+// ── Bottom nav ────────────────────────────────────────────────────────────────
+document.querySelectorAll('.bnav-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.bnav-btn').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); activeView=b.dataset.view; render();
+}));
+
+// ── Day sheet close ───────────────────────────────────────────────────────────
+document.getElementById('closeDaySheet').onclick=()=>document.getElementById('dayOverlay').style.display='none';
+document.getElementById('dayOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.style.display='none';});
+
+// ── Add sheet ─────────────────────────────────────────────────────────────────
+document.getElementById('openAdd').onclick=()=>{
+  document.getElementById('iDate').value=toStr(today);
+  document.getElementById('addOverlay').style.display='flex';
+};
+document.getElementById('cancelAdd').onclick=()=>document.getElementById('addOverlay').style.display='none';
+document.getElementById('addOverlay').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.style.display='none';});
+document.getElementById('saveAdd').onclick=()=>{
+  const name=document.getElementById('iName').value.trim(),date=document.getElementById('iDate').value;
+  if(!name||!date){alert('Rellena nombre y fecha.');return;}
+  events.push({id:nextId++,name,house:Number(document.getElementById('iHouse').value),room:document.getElementById('iRoom').value.trim()||'Hab.',type:document.getElementById('iType').value,date});
+  save(SK,events);
+  document.getElementById('addOverlay').style.display='none';
+  document.getElementById('iName').value='';document.getElementById('iRoom').value='';
+  render();sendNotifications();
+};
+
+// ── Service Worker ────────────────────────────────────────────────────────────
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+render();
+sendNotifications();
+</script>
+</body>
+</html>
