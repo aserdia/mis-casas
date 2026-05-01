@@ -221,6 +221,7 @@ html, body { height:100%; overflow:hidden; font-family:'DM Sans',sans-serif; bac
 
 <script>
 const HOUSES  = ['Isla de Ons','Castellon','Castroviejo','Maudes','Real de Pinto','Villajoyosa'];
+const HSHORT  = ['Isla de Ons','Castellon','Castroviejo','Maudes','Real Pinto','Villajoyosa'];
 const HCOLORS = ['#1A5F9E','#2D7A4F','#8B5E00','#8B3A3A','#6B3FA0','#1A7A7A'];
 const MONTHS  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DAYS    = ['L','M','X','J','V','S','D'];
@@ -401,7 +402,7 @@ function renderCal(){
   const total=Math.ceil((off+dim)/7)*7,ts=toStr(today);
 
   // House chips
-  const chips=[['all','Todas'],...HOUSES.map((h,i)=>[String(i),h.split(' ')[0]+' '+h.split(' ')[1]])];
+  const chips=[['all','Todas'],...HSHORT.map((h,i)=>[String(i),h])];
   const chipHTML=`<div class="house-scroll">${chips.map(([h,l])=>`<button class="hchip${activeHouse===h?' on':''}" data-h="${h}">${l}</button>`).join('')}</div>`;
 
   // Days header
